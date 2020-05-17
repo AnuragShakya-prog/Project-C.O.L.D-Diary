@@ -20,7 +20,7 @@ from usermanagement import views as user_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('diary/',include('diary.urls')),
+    path('',include('diary.urls')),
     path('login/',user_views.login_view),
     path('logout/',LogoutView.as_view()),
     path('signup/',user_views.signup,name='signup'),

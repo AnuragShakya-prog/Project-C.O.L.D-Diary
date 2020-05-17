@@ -17,7 +17,7 @@ def signup(request):
             user=form.save()
             messages.add_message(request,messages.INFO,f"Hey {user.username} your account has been succefully created")
             
-            return redirect("/diary")
+            return redirect("/")
 
     else:
         form=UserCreationForm()
@@ -31,4 +31,4 @@ def login_view(request):
         return LoginView.as_view(template_name='usermanagement/login.html')(request)
 
     else:
-        return redirect("/diary")
+        return redirect("/")

@@ -193,7 +193,7 @@ def newDiaryView(request):
 
                 diaryObj.save()
                 
-                return redirect('/diary')
+                return redirect('/')
 
             else:
                 form.add_error("diary_name",'Diary name already exists')
