@@ -1,0 +1,25 @@
+{%extends 'diary/base.html'%}
+
+{%block body%}
+
+<div class="container">
+    
+    <div class="my-diaries-heading">
+        <span>My </span><span>Diaries</span>
+    </div>
+
+    <div class="add-diary-btn">
+        <a type="button" class="btn btn-outline-primary" href="/diary/new">Add Diary</a>
+    </div>
+    <div class="diaries-container">
+        {%for diary in diaries%}
+        <div class="diary">
+
+          <a href="/diary/{{diary.pk}}/entry"><div class="diary-name"> {{diary.diary_name}}</a></div>
+          <div class="diary-year">{{diary.year}}</div>
+        </div>
+        {%endfor%}
+    </div>
+</div>
+
+{%endblock%}

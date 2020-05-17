@@ -1,0 +1,594 @@
+{%extends 'diary/base.html'%}
+
+{%block body%}
+<div class="entry-table container">
+    <input type="hidden" name="csrftoken" value="{{csrf_token}}">
+    <input type="hidden" name="csrftokendelete" value="{{csrf_token}}">
+    <input type="hidden" name="diary_pk" value="{{csrf_token}}">
+    <!-- <input type="hidden" name="diary_pk" value="{{csrf_token}}"> -->
+    <table class='table table-bordered table-hover table-dark'>
+      <colgroup>
+        
+        <col span="3" class="first3col" >
+        <col class='rank-col'>
+        <col span="3" class="last3col">
+        
+      </colgroup>
+      <thead>
+          <tr>
+            <th scope="col">Serial No.</th>
+            <th scope="col">Packets</th>
+            <th scope="col">Floor</th>
+            <th scope="col">Rank</th>
+            <th scope="col">Removed Packets</th>
+            <th scope="col">Date</th>
+            <th scope="col">InCold</th>
+          </tr>
+        </thead>
+        <tbody class='table-body'>
+          <tr class='col-12 input-row' id="activated-1">
+            <th scope="row" class="serial-no width10" >
+              <div class="input-wrapper" onclick="changeToInput(event,'number','serial_no');">
+                <input type="number" onkeypress="onEnterChange(event); " name='serial_no'>
+              </div>
+            </th>
+            <td class='packets-value width10'>
+                <div class="input-wrapper" onclick="changeToInput(event,'number','packets')">
+                  <input type="number" onkeypress="onEnterChange(event); " name='packets'>
+                </div>
+            </td>
+            <!-- <colgroup></colgroup> -->
+            <td class='floor-value width10'>
+              <div class="input-wrapper" onclick="changeToInput(event,'number','floor')">
+                  <input type="number" onkeypress="onEnterChange(event); " name='floor'>
+              </div>
+            </td>
+            <td class='rank-value'>
+              <div class="input-wrapper" onclick="changeToInput(event,'text','rank');">
+                <input type="text"onkeypress="onEnterChange(event); " onkeyup="changeToUpper(event);" name='rank'>
+              </div>
+            </td>
+            
+            <td class='removed_packets-value width10'>
+              <div class="input-wrapper" onclick="changeToInput(event,'removed_packets','removed_packets');">
+                Add
+              </div>
+            </td>
+            <td class='date-value width10'>NotDefined</td>
+            <td><a href="" class='btn btn-primary incold-btn'>Yes</a></td>
+          </tr>
+          <!-- Loading data from database -->
+          {%for entry in Entries%}
+          <tr class='col-12 data-row row-{{entry.pk}}'>
+            <th scope="row" class="serial-no width10" >
+              <div class="input-wrapper database-input#{{entry.pk}}" onclick="changeToInput(event,'number','serial_no');">
+                <!-- <input type="number" onkeypress="onEnterChange(event); " name='serial_no'> -->
+                {{entry.serial_no}}
+              </div>
+            </th>
+            <td class='packets-value width10'>
+                <div class="input-wrapper database-input#{{entry.pk}}" onclick="changeToInput(event,'number','packets')">
+                  <!-- <input type="number" onkeypress="onEnterChange(event); " name='packets'> -->
+                  {{entry.packets}}
+                </div>
+            </td>
+            <!-- <colgroup></colgroup> -->
+            <td class='floor-value width10'>
+              <div class="input-wrapper database-input#{{entry.pk}}" onclick="changeToInput(event,'number','floor')">
+                  <!-- <input type="number" onkeypress="onEnterChange(event); " name='floor'> -->
+                  {{entry.floor}}
+              </div>
+
+            </td>
+            <td class='rank-value'>
+              <div class="input-wrapper database-input#{{entry.pk}}" onclick="changeToInput(event,'text','rank');">
+                <!-- <input type="text"onkeypress="onEnterChange(event); " onkeyup="changeToUpper(event);" name='rank'> -->
+                {{entry.rank}}
+              </div>
+            </td>
+            
+            <td class='removed_packets-value width10'>
+              <div class="input-wrapper database-input#{{entry.pk}}" onclick="changeToInput(event,'removed_packets','removed_packets');">
+                {{entry.removed_packets}}
+              </div>
+            </td>
+            <td class='date-value width10'>NotDefined</td>
+            <td><a href="#" class='btn btn-primary incold-btn'>Yes</a></td>
+          </tr>
+          {%endfor%}
+        </tbody>
+      </table>
+</div>      
+{%endblock%}
+
+{%block script%}
+<script>
+  let diary_pk={{ diary_pk }};
+
+  let row_id=2;
+
+  function onEnterChange(e){
+    // console.log(e.keyCode);
+    if(e.keyCode==13){
+      // Checking if input field is blank
+
+      let inpValue=event.target.value;
+      let withoutSpacesValue=inpValue.replace(/\s+/g,'');
+
+     
+
+      if (withoutSpacesValue==''){
+
+        // setting red border to input field if field value is blank
+
+        e.target.style.border="2px solid red";
+        return;
+      }else{
+        // converting text from "Ab  ba" to "Ab ba" and setting it to inputField
+        e.target.value=inpValue.replace(/\s+/g,' ');
+      }
+      
+      
+      // First checking if inputField is of a saved entry
+      // Getting class input parent mean of input-wrapper
+      let inputParent=e.target.parentElement;
+      let inputParentclass=$(inputParent).attr('class');
+
+      // Getting database-input# class
+      // It will give undefined if the inputParent has only one class like "input-wrapper"
+      // Instead of "input-wrapper database-input#"
+      let databaseClass=inputParentclass.split(' ')[1]
+      
+      // Checking if class is not undefined
+      if(databaseClass){
+
+        let rowId=databaseClass.split('#')[1];
+        
+        // getting field attribute name like "rank"
+        let inputFieldName=$(e.target).attr('name');
+
+        // then getting it's value
+        let inputValue=e.target.value;
+        
+        // formatting data
+        jsonData=`{"${inputFieldName}":"${inputValue}"}`;
+
+        // parsing json data to obj
+        data=JSON.parse(jsonData);
+
+        // Adding csrfmiddlewaretoken
+        data.csrfmiddlewaretoken=$("input[name='csrftoken']").attr('value');
+        
+        editRow(rowId,e.target,data);
+        
+        if(window.updated){
+          // Getting row 
+          let rowOfInput=e.target.parentElement.parentElement.parentElement;
+          // creating text node from it's value
+          let valueNode=document.createTextNode(e.target.value);
+          
+          // appending textNode
+          e.target.parentElement.appendChild(valueNode);
+          // deleteing inputField
+          e.target.parentElement.removeChild(e.target);   
+        }else{
+          return;
+        }
+      
+      
+      }else{
+
+        let is_valid_serial=false;
+        // Validating serial_no
+        if ($(e.target).attr('name')=='serial_no'){
+        // let serial_no_value=($(e.target).attr('value'));
+     
+        window.data_main={
+          is_valid:false
+        }
+      
+        $.ajax({
+            type:'get',
+            url:`/diary/${diary_pk}/entry/validate?serial_no=${inpValue}`,
+            success:(data)=>{
+              if (data.is_valid){
+                window.data_main=data;
+              }
+            },
+            async:false,
+
+          })
+
+        if(!window.data_main.is_valid){
+          $(e.target).css({'border-color':'red'}); 
+          return;
+        }
+      }
+      }
+      // Handl1ing editing of row
+      
+     
+   
+      console.log(window.updated);   
+      // Getting row 
+      let rowOfInput=e.target.parentElement.parentElement.parentElement;
+      // creating text node from it's value
+      let valueNode=document.createTextNode(e.target.value);
+      
+      // appending textNode
+      e.target.parentElement.appendChild(valueNode);
+      // deleteing inputField
+      e.target.parentElement.removeChild(e.target);   
+
+      // Now checking if the input was of database-input or activated-num
+
+     // Getting rowId like activated-1
+      let rowId=rowOfInput.id;
+
+      try{
+        getFocusToNextInput();
+
+      }
+
+      catch(err){
+        console.log(err);
+      }
+      addEntry(e,rowId);
+
+
+    }
+  }
+
+
+  function changeToInput(event,inputType,name){
+    // console.log(inputType);
+    
+
+    if (inputType=='removed_packets'){
+      let previousValue=event.target.innerText;
+      event.target.innerHTML=`<input type="text" onkeypress="onEnterChange(event);" name='removed_packets' value=${previousValue}> `;
+
+    }else{
+      let previousValue=String(event.target.innerText);
+      // console.log(inputType);
+      event.target.innerHTML=`<input type="${inputType}" onkeypress="onEnterChange(event);" value='${previousValue}' name=${name}>`;
+    
+    }
+    
+  
+
+  }
+
+
+  function addEntry(event,rowId){
+    // console.log(' in entry');
+    if(event.keyCode==13){
+  
+      let newRow=`<tr class='col-12 input-row' id="activated-${row_id}">
+            <th scope="row" class="serial-no width10" >
+              <div class="input-wrapper" onclick="changeToInput(event,'number','serial_no');">
+                <input type="number" onkeypress="onEnterChange(event); " name='serial_no'>
+              </div>
+            </th>
+            <td class='packets-value width10'>
+                <div class="input-wrapper" onclick="changeToInput(event,'number','packets')">
+                  <input type="number" onkeypress="onEnterChange(event); " name='packets'>
+                </div>
+            </td>
+            <!-- <colgroup></colgroup> -->
+            <td class='floor-value width10'>
+              <div class="input-wrapper" onclick="changeToInput(event,'number','floor')">
+                  <input type="number" onkeypress="onEnterChange(event); " name='floor'>
+              </div>
+            </td>
+            <td class='rank-value'>
+              <div class="input-wrapper" onclick="changeToInput(event,'text','rank');">
+                <input type="text"onkeypress="onEnterChange(event); " onkeyup="changeToUpper(event);" name='rank'>
+              </div>
+            </td>
+            
+            <td class='removed_packets-value width10'>
+              <div class="input-wrapper" onclick="changeToInput(event,'removed_packets','removed_packets');">
+                Add
+              </div>
+            </td>
+            <td class='date-value width10'>NotDefined</td>
+            <td><a href="" class='btn btn-primary incold-btn'>Yes</a></td>
+          </tr>`
+
+
+      let allInps=Array.from(document.querySelectorAll(".input-wrapper input"));
+        
+      let add=false;
+      console.log(allInps);        
+      
+
+      if (allInps.length==0){
+        add=true;
+
+      }
+
+     
+
+
+
+      if(add){
+        row_id+=1;
+        console.log('hey');
+        addRow(rowId);
+
+        document.getElementsByClassName('table-body')[0].innerHTML=newRow+document.getElementsByClassName('table-body')[0].innerHTML;
+        addDeleteListener();
+      }
+      getFocusToNextInput();
+    }
+
+
+
+  }
+
+  
+  function getFocusToNextInput(){
+    
+    try{
+     
+      //  Getting all input fields
+      let allInputFields=document.querySelectorAll('.input-wrapper input');
+
+      // Focusing on first input field
+      allInputFields[0].focus();
+     
+    }
+    catch(err){
+      let _=8;
+    
+    }
+  }
+
+
+  function changeToUpper(event){
+    // this chanes input value to upper;
+    event.target.value=event.target.value.toUpperCase();
+  }
+
+  function editRow(rowId,inputField,data){
+    let updated=false;
+    // Its sends post request to update entry obj on the server
+    $.ajax({
+      type:'post',
+      url:`/diary/entry/update/${rowId}`,
+      data:data,
+      success:(data)=>{
+        window.updated=data.successfully_updated;
+        console.log(window.updated);
+        console.log(data);
+      },
+      async:false,
+    })
+
+   
+
+}
+
+  function addRow(rowId){
+  
+    let row=document.getElementById(rowId);
+
+    let rowIdNum=Number(rowId.split("-")[1])
+    let allFields=[]    
+    // All td columns of a row except serial_no
+    let inputFields=document.querySelectorAll(`#${rowId} td`);
+
+    let data={};
+    
+    data.csrfmiddlewaretoken=$("input[name='csrftoken']").attr('value');
+
+    inputFields.forEach((field)=>{
+      allFields.push(field);
+    })
+
+    // adding serial_no field to allFields
+    let serialNoField=document.querySelector(`#${rowId} th`);
+
+    allFields.push(serialNoField);
+
+    
+    // Preparing data obj
+    allFields.forEach((field)=>{
+
+      let fieldName='blank';
+
+
+      console.log(field);
+      console.log(field.classList);
+
+      if (field.classList.length!=0){
+          fieldName=field.classList[0].split('-')[0];
+      }
+      // console.log(field);
+      console.log(fieldName);
+
+      let fieldValue=field.innerText;
+
+      switch(fieldName){
+
+        case "rank":{
+
+          fieldValue=fieldValue.replace(/\s+/g,' ');
+          data.rank=fieldValue;
+          break;
+        }
+
+
+        
+        case "serial":{
+
+          fieldValue=Number(fieldValue);
+          data.serial_no=fieldValue;
+          break;
+        }
+
+
+        case "removed_packets":{
+
+          fieldValue=Number(fieldValue);
+          if (fieldValue){
+            data.removed_packets=fieldValue;
+          }
+          break;
+        }
+
+        case "floor":{
+
+          fieldValue=Number(fieldValue);
+          data.floor=fieldValue;
+          break;
+        }
+
+        case "packets":{
+
+          fieldValue=Number(fieldValue);
+          data.packets=fieldValue;
+          console.log('also here in switch packets');
+          break;
+        }
+
+
+      }
+
+    })
+
+    console.log(data);
+
+    $.ajax({
+      type:'post',
+
+      url:`/diary/${diary_pk}/entry/new`,
+
+      data:data,
+
+      success:(data)=>{
+        if (data.success){
+          let entryId=data.entryId;
+          console.log(data);
+          // Adding database-input#id class to each td.input-wrapper
+          let fields=document.querySelectorAll(`#${rowId} td`);
+
+          // adding row-id class
+          // Adding row-entryid class and removing input class
+          // Note:order of adding class is important 
+          // row-entryId must be added after data-row
+          $(`#${rowId}`).removeClass("input-row");
+          
+          $(`#${rowId}`).addClass("data-row");
+          $(`#${rowId}`).addClass(`row-${entryId}`);
+          $(`#${rowId}`).removeAttr('id');
+
+          for(let field of fields){
+            
+            try{
+              if (field.children){
+                field.children[0].className+=` database-input#${entryId}`;
+                
+                console.log(entryId);
+
+              }
+            }
+            catch(err){
+              console.log(err);
+            }
+          }
+        
+        }
+      }
+
+    });
+
+
+  }
+
+let pressTimeOut;
+let deleteTimeOut=2000;
+
+$('tr').on('click',(e)=>{
+  console.log('clicked');
+})
+
+function addDeleteListener(){
+  $(".data-row").mousedown((e)=>{
+      
+      // starts timeout or timer for calling function
+      pressTimeOut=setTimeout(()=>{
+
+        let row=$(e.target).closest("tr")[0];
+
+        let rowClasses=row.classList
+        let entryPk;
+
+        for(let rowClass of rowClasses){
+          console.log(rowClass);
+          if (rowClass.startsWith("row"))  {
+
+            entryPk=Number(rowClass.split("-")[1])
+            break;
+
+          }
+
+        }
+
+        let deleteRow=confirm(`Do you want to delete this row with pk-${entryPk}`);
+        if(deleteRow){
+          deleteEntry(entryPk);
+
+        }
+
+    },deleteTimeOut)
+  }).mouseup((e)=>{
+      // deletes timeout or timer for calling function
+    clearTimeout(pressTimeOut);
+
+  })
+    
+  $(".data-row").on("touchstart",((e)=>{
+    pressTimeOut=setTimeout(()=>{
+      alert("Hello long pressed")
+    },1000)
+  })).on("touchend",((e)=>{
+    clearTimeout(pressTimeOut);
+  }))
+}
+
+addDeleteListener();
+
+function getCsrfToken(){
+
+  return $("input[name='csrftoken']").attr('value');
+  
+}
+
+function deleteEntry(rowId){
+  console.log();
+  let data={};
+  data.csrfmiddlewaretoken=$("input[name='csrftokendelete']").attr('value');
+
+  console.log(data);
+  $.ajax({
+    
+    url:`/diary/delete/entry/${rowId}/`,
+    type:'post',
+    data:data,
+    success:(data)=>{
+      console.log(data);
+      if (data.deleted){
+    
+        $(`.row-${rowId}`).remove();
+
+
+      }
+    }
+  })
+
+}
+  // window.getFocus=getFocus;
+</script>
+{%endblock%}
